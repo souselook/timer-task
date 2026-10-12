@@ -1,0 +1,30 @@
+name: Build Windows EXE
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'timer_task.py'
+      - '.github/workflows/build-exe.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+      - name: Build EXE (onefile, windowed)
+        run: >
+          pyinstaller --clean --noconfirm --onefile --windowed --name TimerTask
+          --hidden-import tkinter.ttk --hidden-import tkinter.messagebox
+          timer_task.py
+      - name: Smoke test CLI dry-run
+        run: python timer_task.py --cli --dry-run --time 1 --action preview
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TimerTask-win64
+          path: dist/TimerTask.exe
